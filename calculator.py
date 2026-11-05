@@ -1,29 +1,132 @@
+
 import streamlit as st
 
-st.set_page_config(page_title="SmartCalc", page_icon="🧮")
-
-st.title("🧮 SmartCalc")
-st.write("A simple calculator")
-
-num1 = st.number_input("First number", value=0.0)
-num2 = st.number_input("Second number", value=0.0)
-
-operation = st.selectbox(
-    "Choose an operation",
-    ["Addition (+)", "Subtraction (-)", "Multiplication (×)", "Division (÷)"]
+st.set_page_config(
+    page_title="SmartCalc",
+    page_icon="🧮",
+    layout="centered"
 )
 
-if st.button("Calculate"):
-    if operation == "Addition (+)":
-        result = num1 + num2
-    elif operation == "Subtraction (-)":
-        result = num1 - num2
-    elif operation == "Multiplication (×)":
-        result = num1 * num2
-    else:
-        if num2 == 0:
-            st.error("Cannot divide by zero.")
-            st.stop()
-        result = num1 / num2
+st.markdown("""
+<style>
+.stApp {
+    background-color: #17191f;
+    color: white;
+}
+h1 {
+    text-align: center;
+    color: white;
+}
+.result {
+    background: #292d36;
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: right;
+    font-size: 35px;
+    margin-bottom: 15px;
+}
+div.stButton > button {
+    width: 100%;
+    height: 65px;
+    border-radius: 15px;
+    font-size: 23px;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
 
-    st.success(f"Result: {result}")
+st.title("🧮 SmartCalc")
+
+if "display" not in st.session_state:
+    st.session_state.display = "0"
+if "first" not in st.session_state:
+    st.session_state.first = None
+if "operator" not in st.session_state:
+    st.session_state.operator = None
+if "new_number" not in st.session_state:
+    st.session_state.new_number = False
+
+def press(value):
+    s = st.session_state
+
+    if value.isdigit() or value == ".":
+        if s.new_number:
+            s.display = "0" if value == "." else value
+            s.new_number = False
+        elif value == ".":
+            if "." not in s.display:
+                s.display += "."
+        else:
+            s.display = value if s.display == "0" else s.display + value
+
+    elif value in ["+", "−", "×", "÷"]:
+        s.first = float(s.display)
+        s.operator = value
+        s.new_number = True
+
+    elif value == "=":
+        if s.first is not None and s.operator:
+            a = s.first
+            b = float(s.display)
+            op = s.operator
+
+            if op == "+":
+                result = a + b
+            elif op == "−":
+                result = a - b
+            elif op == "×":
+                result = a * b
+            else:
+                if b == 0:
+                    s.display = "Error"
+                    s.first = None
+                    s.operator = None
+                    s.new_number = True
+                    return
+                result = a / b
+
+            s.display = str(round(result, 8))
+            s.first = None
+            s.operator = None
+            s.new_number = True
+
+    elif value == "AC":
+        s.display = "0"
+        s.first = None
+        s.operator = None
+        s.new_number = False
+
+    elif value == "±":
+        if s.display != "0" and s.display != "Error":
+            s.display = str(-float(s.display))
+
+    elif value == "%":
+        if s.display != "Error":
+            s.display = str(float(s.display) / 100)
+
+st.markdown(
+    f'<div class="result">{st.session_state.display}</div>',
+    unsafe_allow_html=True
+)
+
+buttons = [
+    ["AC", "±", "%", "÷"],
+    ["7", "8", "9", "×"],
+    ["4", "5", "6", "−"],
+    ["1", "2", "3", "+"],
+    ["0", ".", "00", "="]
+]
+
+for row_index, row in enumerate(buttons):
+    cols = st.columns(4)
+    for col_index, value in enumerate(row):
+        with cols[col_index]:
+            if st.button(value, key=f"btn_{row_index}_{col_index}"):
+                if value == "00":
+                    press("0")
+                    press("0")
+                else:
+                    press(value)
+                st.rerun()
+
