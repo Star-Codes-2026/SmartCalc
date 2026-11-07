@@ -13,10 +13,12 @@ st.markdown("""
     background-color: #17191f;
     color: white;
 }
+
 h1 {
     text-align: center;
     color: white;
 }
+
 .result {
     background: #292d36;
     color: white;
@@ -25,13 +27,42 @@ h1 {
     text-align: right;
     font-size: 35px;
     margin-bottom: 15px;
+    overflow-wrap: anywhere;
 }
+
 div.stButton > button {
     width: 100%;
     height: 65px;
     border-radius: 15px;
     font-size: 23px;
     font-weight: bold;
+}
+
+/* Keep four calculator buttons in each row on phones */
+@media (max-width: 768px) {
+    div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+
+    div[data-testid="column"] {
+        width: 25% !important;
+        min-width: 0 !important;
+        flex: 1 1 25% !important;
+    }
+
+    div.stButton > button {
+        min-width: 0 !important;
+        padding: 0 2px !important;
+        height: 55px !important;
+        font-size: clamp(15px, 4vw, 22px) !important;
+    }
+
+    .result {
+        font-size: 30px;
+        padding: 20px;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
@@ -119,7 +150,8 @@ buttons = [
 ]
 
 for row_index, row in enumerate(buttons):
-    cols = st.columns(4)
+    cols = st.columns(4, gap="small")
+
     for col_index, value in enumerate(row):
         with cols[col_index]:
             if st.button(value, key=f"btn_{row_index}_{col_index}"):
@@ -129,4 +161,3 @@ for row_index, row in enumerate(buttons):
                 else:
                     press(value)
                 st.rerun()
-
